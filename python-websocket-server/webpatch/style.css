@@ -1,0 +1,70 @@
+canvas {
+  pointer-events: none;
+  position:absolute;
+  top:0px;
+  left:0px;
+}
+
+body {
+  width:1000px;
+  height:1000px;
+}
+
+.node {
+  background-color: #f00;
+  color:white;
+  position:absolute;
+  padding: 3px;
+}
+
+.input {
+  width : 10px;
+  height : 20px;
+  margin-top: 2px;
+  background-color: #000;
+}
+
+.scope {
+  margin-top: 2px;
+  width : 50px;
+  height : 50px;
+}
+
+input {
+  width:50%;
+}
+
+.menuContainer {
+  color:red;
+}
+
+.output {
+  width : 10px;
+  height : 20px;
+  margin-top: 2px;
+  background-color: #000;
+
+}
+
+.inputs {
+  background-color: #a88;
+}
+
+.usrInput {
+  color:black;
+  background-color: #8f8;
+}
+
+.outputs {
+  background-color: #a8a;
+}
+
+#patch {
+  position : absolute;
+}
+
+
+#menu {
+  background-color: #000;
+  color:white;
+}

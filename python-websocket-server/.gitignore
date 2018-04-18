@@ -1,0 +1,7 @@
+env
+*.pyc
+.cache
+.pytest_cache
+.tox
+.env
+*.egg-info

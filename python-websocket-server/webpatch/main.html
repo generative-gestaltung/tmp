@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="node_types.js"></script>
+    <script type="text/javascript" src="patch.js"></script>
+    <script type="text/javascript" src="menu.js"></script>
+    <script>
+
+    var patch;
+    var patchRenderer;
+    var menu;
+    var context;
+    var ws;
+    var time;
+
+    function log (x) {
+      console.log(x);
+    }
+
+
+    var init_ws = function () {
+
+      // Connect to Web Socket
+      ws = new WebSocket("ws://localhost:9001/");
+
+      // Set event handlers.
+      ws.onopen = function() {
+
+      };
+
+      ws.onmessage = function(e) {
+        // e.data contains received string.
+
+      };
+
+      ws.onclose = function() {
+
+      };
+
+      ws.onerror = function(e) {
+        console.log(e)
+      };
+    }
+
+
+    function sendPatch() {
+      ws.send (JSON.stringify({
+        cmd: "PATCH",
+        data: patchRenderer.patch
+      }));
+    }
+
+    function sendCmd (cmd, args) {
+      ws.send (JSON.stringify({
+        cmd: cmd,
+        data: args
+      }));
+    }
+
+    var init = function() {
+
+      canvas = document.getElementById("myCanvas");
+      context = canvas.getContext('2d');
+      context.fillStyle = "#fff";
+
+      patch = new Patch();
+      patchRenderer = new PatchRenderer (patch);
+      menu = new Menu();
+
+      initEvents();
+    }
+
+    var cnt = 0;
+
+    var draw = function() {
+
+      let newTime = performance.now() / 1000.0;
+      let dt = newTime - time;
+      time = newTime;
+
+      patchRenderer.updateGui();
+
+      if (cnt==0) {
+        if (ws.readyState==1) {
+          sendPatch();
+        }
+      }
+      cnt = (cnt+1)%100;
+      requestAnimationFrame(draw);
+    };
+
+    </script>
+  </head>
+
+  <body id="body">
+
+    <div id="patch" width="800" height="800"></div>
+    <div id="menu"></div>
+    <canvas id="myCanvas" width="1200" height="900"></canvas>
+
+    <script>
+      init();
+      init_ws();
+      time = performance.now() / 1000.0;
+      draw();
+    </script>
+
+  </body>
+
+</html>
