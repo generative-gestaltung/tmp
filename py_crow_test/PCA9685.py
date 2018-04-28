@@ -23,67 +23,71 @@ def init_pca9685 (addr):
 
 
 
-init_pca9685 (0x20)
+#init_pca9685 (0x20)
 init_pca9685 (0x40)
-init_pca9685 (0x42)
+#init_pca9685 (0x42)
+
+
+
+def allOff (addr) :
+	bus.write_byte_data (addr, 0xFA, 0x00)
+	bus.write_byte_data (addr, 0xFB, 0x00)
+
+	bus.write_byte_data (addr, 0xFC, 0x00)
+	bus.write_byte_data (addr, 0xFD, 0x00)
+
+def allOn (addr) :
+	bus.write_byte_data (addr, 0xFA, 0x00)
+	bus.write_byte_data (addr, 0xFB, 0x00)
+
+	bus.write_byte_data (addr, 0xFC, 0xff)
+	bus.write_byte_data (addr, 0xFD, 0x0f)
+	
+
+def set (addr, pin, v) :
+
+
+	on = 0x06 + pin*2
+	off = 0x08 + pin*2
+
+	bus.write_byte_data (addr, on, v & 0xff)
+	bus.write_byte_data (addr, on+1, v / 0xff)	
+
+	bus.write_byte_data (addr, off, 0)
+	bus.write_byte_data (addr, off+1, 0)	
+
+
 
 while True :
-
-
-	# OFF
-	#bus.write_byte_data (0x40, 0x06, 0x00)
-	#bus.write_byte_data (0x40, 0x07, 0x00)
-
-
-	# ALL
-	bus.write_byte_data (0x20, 0xFA, 0x00)
-	bus.write_byte_data (0x20, 0xFB, 0x00)
-
-	bus.write_byte_data (0x40, 0xFA, 0x00)
-	bus.write_byte_data (0x40, 0xFB, 0x00)
-
-	bus.write_byte_data (0x42, 0xFA, 0x00)
-	bus.write_byte_data (0x42, 0xFB, 0x00)
 
 
 
 	
 	time.sleep(0.05)
-	
 
+
+	allOff (0x40)
+	#allOn (0x40)
+	#allOff (0x42)
+
+
+		
 	for i in range (0, 4000, 80):
 
 
-		bus.write_byte_data (0x20, 0xFA, 0x00)
-		bus.write_byte_data (0x20, 0xFB, 0x00)
 
-		bus.write_byte_data (0x40, 0xFA, 0x00)
-		bus.write_byte_data (0x40, 0xFB, 0x00)
-
-		bus.write_byte_data (0x42, 0xFA, 0x00)
-		bus.write_byte_data (0x42, 0xFB, 0x00)
+		#bus.write_byte_data (0x40, 0xFA, 0x00)
+		#bus.write_byte_data (0x40, 0xFB, 0x00)
 
 
-		bus.write_byte_data (0x20, 0xFC, ((4000-i)%4000) & 0xff)
-		bus.write_byte_data (0x20, 0xFD, ((4000-i)%4000) / 0xff)	
-
-		bus.write_byte_data (0x40, 0xFC, ((4000-i)%4000) & 0xff)
-		bus.write_byte_data (0x40, 0xFD, ((4000-i)%4000) / 0xff)	
-
-		bus.write_byte_data (0x42, 0xFC, ((4000-i)%4000) & 0xff)
-		bus.write_byte_data (0x42, 0xFD, ((4000-i)%4000) / 0xff)	
+		#bus.write_byte_data (0x40, 0xFC, ((4000-i)%4000) & 0xff)
+		#bus.write_byte_data (0x40, 0xFD, ((4000-i)%4000) / 0xff)	
 		
 		
 		# ON
-		#bus.write_byte_data (0x40, 0x08, i & 0xff)
-		#bus.write_byte_data (0x40, 0x09, i / 0xff)	
 
 
-		#bus.write_byte_data (0x40, 0x0C, ((4000-i)%4000) & 0xff)
-		#bus.write_byte_data (0x40, 0x0D, ((4000-i)%4000) / 0xff)	
-
-
-
+		set (0x40, 0, i)
 
 		
 		time.sleep(0.01)
