@@ -135,7 +135,11 @@ while True:
 
 	
 	if cnt==0:		
-		print encoders[0].v
+		print str(encoders[0].v)+" "+str(encoders[1].v)+" "+str(encoders[2].v)+" "+str(encoders[3].v)
+		print str(encoders[4].v)+" "+str(encoders[5].v)+" "+str(encoders[6].v)+" "+str(encoders[7].v)
+		print str(encoders[8].v)+" "+str(encoders[9].v)+" "+str(encoders[10].v)+" "+str(encoders[11].v)
+		print str(encoders[12].v)+" "+str(encoders[13].v)+" "+str(encoders[14].v)+" "+str(encoders[15].v)
+		
 
 	if cnt==10000:
 		print GPIO.input (PIN_TRIGGER_IN0)
