@@ -22,7 +22,6 @@ def init_pca9685 (addr):
 
 
 
-
 #init_pca9685 (0x20)
 init_pca9685 (0x40)
 #init_pca9685 (0x42)
@@ -66,11 +65,12 @@ while True :
 	time.sleep(0.05)
 
 
-	allOff (0x40)
+	#allOff (0x40)
 	#allOn (0x40)
 	#allOff (0x42)
 
 
+	
 		
 	for i in range (0, 4000, 80):
 
