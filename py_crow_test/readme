@@ -1,0 +1,5 @@
+sudo apt-get install python-smbus
+sudo apt-get install i2c-tools
+
+pip install requirements.txt
+sudo python test.py
