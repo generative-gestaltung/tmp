@@ -1,5 +1,7 @@
 import smbus
 import time
+import math
+import random
 
 bus = smbus.SMBus(1)
 
@@ -22,6 +24,7 @@ def init_pca9685 (addr):
 
 
 init_pca9685 (0x40)
+init_pca9685 (0x42)
 
 while True :
 
@@ -35,6 +38,9 @@ while True :
 	bus.write_byte_data (0x40, 0xFA, 0x00)
 	bus.write_byte_data (0x40, 0xFB, 0x00)
 
+	bus.write_byte_data (0x42, 0xFA, 0x00)
+	bus.write_byte_data (0x42, 0xFB, 0x00)
+
 
 
 	
@@ -43,14 +49,28 @@ while True :
 
 	for i in range (0, 4000, 80):
 
+
+		bus.write_byte_data (0x40, 0xFA, 0x00)
+		bus.write_byte_data (0x40, 0xFB, 0x00)
+
+		bus.write_byte_data (0x42, 0xFA, 0x00)
+		bus.write_byte_data (0x42, 0xFB, 0x00)
+
+
+		bus.write_byte_data (0x40, 0xFC, ((4000-i)%4000) & 0xff)
+		bus.write_byte_data (0x40, 0xFD, ((4000-i)%4000) / 0xff)	
+
+		bus.write_byte_data (0x42, 0xFC, ((4000-i)%4000) & 0xff)
+		bus.write_byte_data (0x42, 0xFD, ((4000-i)%4000) / 0xff)	
+		
 		
 		# ON
-		bus.write_byte_data (0x40, 0x08, i & 0xff)
-		bus.write_byte_data (0x40, 0x09, i / 0xff)	
+		#bus.write_byte_data (0x40, 0x08, i & 0xff)
+		#bus.write_byte_data (0x40, 0x09, i / 0xff)	
 
 
-		bus.write_byte_data (0x40, 0x0C, ((4000-i)%4000) & 0xff)
-		bus.write_byte_data (0x40, 0x0D, ((4000-i)%4000) / 0xff)	
+		#bus.write_byte_data (0x40, 0x0C, ((4000-i)%4000) & 0xff)
+		#bus.write_byte_data (0x40, 0x0D, ((4000-i)%4000) / 0xff)	
 
 
 
