@@ -36,12 +36,13 @@ unsigned char  vopcode;
 unsigned char  Ra_Rb;
 
 
-#define I2C_ADDR0 0x21
-//#define I2C_ADDR1 0x39
-
+#define I2C_ADDR0 0x20
+#define I2C_ADDR1 0x39
 
 int ports[2];
 uint8_t data[2];
+
+uint16_t port_value = 0x0000;
 
 
 void setPin (int pin, int v) {
@@ -63,9 +64,7 @@ void setPort (uint8_t v) {
 
 void update (int p) {
 	//printf("%d\n", data[p]);
-	//wiringPiI2CWrite (ports[p], data[p]);
-	wiringPiI2CWriteReg16 (ports[0], 0, data[1]<<8 | data[0]);
-
+	wiringPiI2CWrite (ports[p], data[p]);
 }
 
 //------------------------------------------------------------
@@ -134,7 +133,7 @@ void main(){
 
 	wiringPiSetup();
 	ports[0] = wiringPiI2CSetup (I2C_ADDR0);
-	//ports[1] = wiringPiI2CSetup (I2C_ADDR1);
+	ports[1] = wiringPiI2CSetup (I2C_ADDR1);
 
 
 	setPin (RST, 1); //RST=1;
