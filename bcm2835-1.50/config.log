@@ -193,6 +193,7 @@ config.status:847: creating Makefile
 config.status:847: creating src/Makefile
 config.status:847: creating doc/Makefile
 config.status:847: creating config.h
+config.status:1028: config.h is unchanged
 config.status:1076: executing depfiles commands
 
 ## ---------------- ##
@@ -307,7 +308,7 @@ host_alias=''
 htmldir='${docdir}'
 includedir='${prefix}/include'
 infodir='${datarootdir}/info'
-install_sh='${SHELL} /home/maxg/dev/_lib/bcm2835-1.50/install-sh'
+install_sh='${SHELL} /home/maxg/dev/tmp/bcm2835-1.50/install-sh'
 libdir='${exec_prefix}/lib'
 libexecdir='${exec_prefix}/libexec'
 localedir='${datarootdir}/locale'
