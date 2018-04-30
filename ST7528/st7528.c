@@ -19,8 +19,6 @@ Program for writing to Newhaven Display graphic LCD.
 //#include <at89x51.h>
 #include "picture.h"
 #include <inttypes.h>
-#include <stdlib.h>
-
 //-----------------------------------------------------------
 //#define bus 0//P1
 #define PS0 0
@@ -41,59 +39,12 @@ unsigned char  vopcode;
 unsigned char  Ra_Rb;
 
 
-#define NULL 0
-#define I2C_SMBUS 0x0720
-#define I2C_SMBUS_READ 1
-#define I2C_SMBUS_WRITE 0
-#define I2C_SMBUS_BYTE 1
-#define I2C_SMBUS_BYTE_DATA 2
-#define I2C_SMBUS_WORD_DATA 3
-
-
-
-#define LOOP 0
-#define STATIC_PINS 0
-#define USE_PCF8575 0
-
-#define I2C_ADDR0 0x38
+#define I2C_ADDR0 0x20
 #define I2C_ADDR1 0x39
-#define I2C_ADDR2 0x20
 
 
-/*
-union i2c_smbus_data {
-	uint8_t data;
-	uint16_t word;
-	uint8_t block[32];
-};
-*/
-struct i2c_smbus_ioctl_data {
-	char read_write;
-	uint8_t command;
-
-	int size;
-	union i2c_smbus_data* data;
-};
-
-
-
-int i2c_smbus_access (int fd, char rw, uint8_t cmd, int size, union i2c_smbus_data* data) {
-
-	struct i2c_smbus_ioctl_data args;
-	args.read_write = rw;
-	args.command    = cmd;
-	args.size       = size;
-	args.data       = data;
-
-	return ioctl (fd, I2C_SMBUS, &args);
-
-}
-
-
-int ports[3];
+int ports[2];
 uint8_t data[2];
-
-uint16_t port_value = 0x0000;
 
 
 void setPin (int pin, int v) {
@@ -116,15 +67,8 @@ void setPort (uint8_t v) {
 void update (int p) {
 	//printf("%d\n", data[p]);
 	//wiringPiI2CWrite (ports[p], data[p]);
-	//printf("%d\n", data[0]);
+	wiringPiI2CWrite (ports[p], data[p]);
 
-#if USE_PCF8575
-	//i2c_smbus_access (ports[0], I2C_SMBUS_WRITE, data, I2C_SMBUS_BYTE, NULL);
-	wiringPiI2CWriteReg8 (ports[2], data[0], data[1]);
-
-#else
-	i2c_smbus_access (ports[p], I2C_SMBUS_WRITE, data[p], I2C_SMBUS_BYTE, NULL);
-#endif
 }
 
 //------------------------------------------------------------
@@ -170,39 +114,20 @@ void show_display(unsigned char *lcd_string)
  unsigned char page;
  unsigned char col;
  unsigned int c=0;
+ for (page=0xB0;page<0xC0;page++)		/*write to page 0 then go to mext page .*/
+ {										/*     128pixels / 8per page = 16 pages    */
+  write_command(page);					/*Set page address*/
+  write_command(0x10);					/*Set column address MSB*/
+  write_command(0x00);					/*Set column address LSB*/
 
- uint8_t dat = 0;
-
- //for (page=0xB0;page<0xBF;page++)		/*write to page 0 then go to mext page .*/
- //{										/*     128pixels / 8per page = 16 pages    */
- // write_command(page);					/*Set page address*/
-
-int cnt = 0;
-for (col=0; col<1; col++) {
-
-  //write_command (0x10);// | (col>>4) );					/*Set column address MSB*/
-  //write_command (0x00);// | (col&0x0f) );					/*Set column address LSB*/
-
-  //for(col=0;col<32;col++)				/*each page has 128 pixel columns*/ 
-  //{
+  for(col=0;col<32;col++)				/*each page has 128 pixel columns*/
+  {
    //write_data(*lcd_string);				/*16 level grayscale; write each byte 4 times*/
    //write_data(*lcd_string);
    //write_data(*lcd_string);
-   dat = *lcd_string++;
-   dat = 3;
-   //if (col>2) dat = 0;
-   //else dat = 1;
-
-   write_data (dat);
-   //write_data (dat);
-   //write_data (dat);
-   //write_data (dat);
-   cnt++;
-
+   write_data(*lcd_string++);			/*increment to next byte of data*/
   }
-// }
-
-printf("wrote %d cols\n", cnt);
+ }
 }
 
 
@@ -211,60 +136,34 @@ void main(){
 
 
 	wiringPiSetup();
-
-
-#if USE_PCF8575
-	ports[2] = wiringPiI2CSetup (I2C_ADDR2);
-#else
 	ports[0] = wiringPiI2CSetup (I2C_ADDR0);
 	ports[1] = wiringPiI2CSetup (I2C_ADDR1);
-#endif
 
 
 	setPin (PS0, 1);
 	update(0);
-	delay(1);
-
-#if STATIC_PINS
-
-	setPin (0, 0);
-	setPin (1, 0);
-	setPin (2, 0);
-	setPin (3, 0);
-	setPin (4, 0);
-	setPin (5, 0);
-	setPin (6, 0);
-	setPin (7, 0);
-
-	setPort (0x55);
-	update(0);
-
-
-	printf("%d %d\n", data[0], data[1]);
-
-	return 0;
-#endif
-
+	delay(50);
 
 	setPin (RST, 1); //RST=1;
+	update(0);
 	delay(1);
 	setPin (RST, 0); //RST=0;								/*Reset lcd controller*/
-	delay(1);
-	setPin (RST, 1); //RST=1;
+	update(0);	delay(1);
+	setPin (RST, 1);
+	update(0);
 	delay(1);
 	vopcode=45;							/*Electronic volumn setting*/
 	Ra_Rb=0x27;							/*Internal resistance ratio*/
 
-	printf("loop\n");
+	printf("loop %d\n", data[0]);
 	lcd_init();						/*Initialize the LCD controller*/
-	show_display(big_text);
 
-	while (LOOP){
+	for(;;){
 		//lcd_init();						/*Initialize the LCD controller*/
 		//show_display(small_text);		/*Show 128x128 pictures*/
 		//delay(50);
-		show_display(picture);
-		delay(2000);
+		show_display(big_text);
+		delay(800);
 		//show_display(picture);
 		//delay(50);
 		printf(".\n");
