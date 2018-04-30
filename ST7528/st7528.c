@@ -55,9 +55,9 @@ unsigned char  Ra_Rb;
 #define STATIC_PINS 0
 #define USE_PCF8575 0
 
-#define I2C_ADDR0 0x20
+#define I2C_ADDR0 0x38
 #define I2C_ADDR1 0x39
-#define I2C_ADDR2 0x21
+#define I2C_ADDR2 0x20
 
 
 /*
@@ -211,7 +211,6 @@ void main(){
 
 
 	wiringPiSetup();
-	setPin (PS0, 1);
 
 
 #if USE_PCF8575
@@ -222,7 +221,9 @@ void main(){
 #endif
 
 
-
+	setPin (PS0, 1);
+	update(0);
+	delay(1);
 
 #if STATIC_PINS
 
