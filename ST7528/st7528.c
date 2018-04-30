@@ -1,4 +1,4 @@
-//---------------------------------------------------------
+#//---------------------------------------------------------
 /*
 NHD-C128128BZ.c
 Program for writing to Newhaven Display graphic LCD.
@@ -39,35 +39,34 @@ unsigned char  vopcode;
 unsigned char  Ra_Rb;
 
 
-#define I2C_ADDR0 0x20
+#define I2C_ADDR0 0x22
 #define I2C_ADDR1 0x39
 
-
-int ports[2];
-uint8_t data[2];
+int fd0, fd1;
+uint8_t data0, data1;
 
 
 void setPin (int pin, int v) {
 	if (v==0)
-		data[0] &= ~(v<<pin);
+		data0 = data0 & ~(1<<pin);
 	if (v==1)
-		data[0] |= (v<<pin);
+		data0 = data0 | (1<<pin);
 
 	//wiringPiI2CWriteReg16 (port0, 0, port_value);
 	//wiringPiI2CWrite (port0, port_value & 0xff);
 }
 
 void setPort (uint8_t v) {
-	data[1] = v;
+	data1 = v;
 	//wiringPiI2CWriteReg16 (port0, 0, port_value);
-	//wiringPiI2CWrite (port1, port_value >> 8);
+	wiringPiI2CWrite (fd1, data1);
 
 }
 
-void update (int p) {
-	//printf("%d\n", data[p]);
+void update0 () {
+	//printf("%d\n", data0);
 	//wiringPiI2CWrite (ports[p], data[p]);
-	wiringPiI2CWrite (ports[p], data[p]);
+	wiringPiI2CWrite (fd0, data0);
 
 }
 
@@ -76,36 +75,51 @@ void update (int p) {
 //-------------------------------------------------------------
 void write_command(unsigned char datum)
 {
+
  setPin (A0, 0); //A0=0;									/*Instruction register*/
- update(0);
+ update0();
+
  setPin (E, 1);//E=1;									  /*Read inactive*/
- update(0);
- setPort (datum); //bus=datum;							/*put data on port 1*/
- update(1);
- setPin (CSB, 0); //CSB=0;									/*Chip select active*/
- setPin (RW, 0); //RW=0;									/*Write active*/
- update(0);
- setPin (RW, 1); //RW=1;									/*Write inactive; latch in data*/
- setPin (CSB, 1); //CSB=1;									/*Chip select inactive*/
- //printf("cmd\n");
- update(0);
+ update0();
+
+ setPort (datum);
+
+ setPin (CSB, 0);
+ update0();
+
+ setPin (RW, 0);
+ update0();
+
+ setPin (RW, 1);
+ update0();
+
+ setPin (CSB, 1);
+ update0();
 }
+
 
 void write_data(unsigned char datum)
 {
  setPin (A0, 1); //A0=1;
- update(0);									/*DDRAM data register*/
+ update0();
+
  setPin (E, 1); //E=1;
- update(0);
+ update0();
+
  setPort (datum); //bus=datum;
- update(1);
+
  setPin (CSB, 0); //CSB=0;
+ update0();
+
  setPin (RW, 0); //RW=0;
- update(0);
+ update0();
+
+
  setPin (RW, 1); //RW=1;
+ update0();
+
  setPin (CSB, 1); //CSB=1;
- update(0);
- //printf("dat\n");
+ update0();
 }
 
 
@@ -114,18 +128,18 @@ void show_display(unsigned char *lcd_string)
  unsigned char page;
  unsigned char col;
  unsigned int c=0;
- for (page=0xB0;page<0xC0;page++)		/*write to page 0 then go to mext page .*/
+ for (page=0xB0;page<0xB0+4;page++)		/*write to page 0 then go to mext page .*/
  {										/*     128pixels / 8per page = 16 pages    */
   write_command(page);					/*Set page address*/
   write_command(0x10);					/*Set column address MSB*/
   write_command(0x00);					/*Set column address LSB*/
 
-  for(col=0;col<32;col++)				/*each page has 128 pixel columns*/
+  for(col=0; col<128;col++)				/*each page has 128 pixel columns*/
   {
    //write_data(*lcd_string);				/*16 level grayscale; write each byte 4 times*/
    //write_data(*lcd_string);
    //write_data(*lcd_string);
-   write_data(*lcd_string++);			/*increment to next byte of data*/
+   write_data (*lcd_string++);
   }
  }
 }
@@ -136,33 +150,35 @@ void main(){
 
 
 	wiringPiSetup();
-	ports[0] = wiringPiI2CSetup (I2C_ADDR0);
-	ports[1] = wiringPiI2CSetup (I2C_ADDR1);
+	fd0 = wiringPiI2CSetup (I2C_ADDR0);
+	fd1 = wiringPiI2CSetup (I2C_ADDR1);
+	//ports[1] = wiringPiI2CSetup (I2C_ADDR1);
 
 
 	setPin (PS0, 1);
-	update(0);
+	setPin (PS1, 1);
+	update0();
 	delay(50);
 
 	setPin (RST, 1); //RST=1;
-	update(0);
+	update0();
 	delay(1);
 	setPin (RST, 0); //RST=0;								/*Reset lcd controller*/
-	update(0);	delay(1);
+	update0();	delay(1);
 	setPin (RST, 1);
-	update(0);
+	update0();
 	delay(1);
 	vopcode=45;							/*Electronic volumn setting*/
 	Ra_Rb=0x27;							/*Internal resistance ratio*/
 
-	printf("loop %d\n", data[0]);
-	lcd_init();						/*Initialize the LCD controller*/
+	printf("loop %d\n", data0);
+        lcd_init();						/*Initialize the LCD controller*/
 
 	for(;;){
 		//lcd_init();						/*Initialize the LCD controller*/
 		//show_display(small_text);		/*Show 128x128 pictures*/
 		//delay(50);
-		show_display(big_text);
+		show_display(picture);
 		delay(800);
 		//show_display(picture);
 		//delay(50);
