@@ -21,6 +21,9 @@ Program for writing to Newhaven Display graphic LCD.
 #include <inttypes.h>
 //-----------------------------------------------------------
 //#define bus 0//P1
+#define PS0 0
+#define PS1 1
+#define PS2 2
 #define CSB 3//P3_5
 #define RST 4//P3_4
 #define A0 5//P3_2
@@ -47,7 +50,7 @@ unsigned char  Ra_Rb;
 
 
 
-#define USE_PCF8575 1
+#define USE_PCF8575 0
 
 #define I2C_ADDR0 0x20
 #define I2C_ADDR1 0x39
@@ -110,6 +113,7 @@ void setPort (uint8_t v) {
 void update (int p) {
 	//printf("%d\n", data[p]);
 	//wiringPiI2CWrite (ports[p], data[p]);
+	//printf("%d\n", data[0]);
 
 #if USE_PCF8575
 	//i2c_smbus_access (ports[0], I2C_SMBUS_WRITE, data, I2C_SMBUS_BYTE, NULL);
@@ -163,18 +167,26 @@ void show_display(unsigned char *lcd_string)
  unsigned char page;
  unsigned char col;
  unsigned int c=0;
- for (page=0xB0;page<0xC0;page++)		/*write to page 0 then go to mext page .*/
+ for (page=0xB0;page<0xBF;page++)		/*write to page 0 then go to mext page .*/
  {										/*     128pixels / 8per page = 16 pages    */
   write_command(page);					/*Set page address*/
-  write_command(0x10);					/*Set column address MSB*/
-  write_command(0x00);					/*Set column address LSB*/
 
-  for(col=0;col<32;col++)				/*each page has 128 pixel columns*/
-  {
+for (col=0; col<32; col++) {
+
+  write_command (0x10 | (col>>4) );					/*Set column address MSB*/
+  write_command (0x00 | (col&0x0f) );					/*Set column address LSB*/
+
+  //for(col=0;col<32;col++)				/*each page has 128 pixel columns*/ 
+  //{
    //write_data(*lcd_string);				/*16 level grayscale; write each byte 4 times*/
    //write_data(*lcd_string);
    //write_data(*lcd_string);
-   write_data(*lcd_string++);			/*increment to next byte of data*/
+   uint8_t dat = *lcd_string++;
+   //if (col%2) dat = 0;
+   write_data(dat);			/*increment to next byte of data*/
+   //write_data(dat);			/*increment to next byte of data*/
+   //write_data(dat);			/*increment to next byte of data*/
+   //write_data(dat);			/*increment to next byte of data*/
   }
  }
 }
@@ -185,6 +197,7 @@ void main(){
 
 
 	wiringPiSetup();
+	setPin (PS0, 1);
 
 #if USE_PCF8575
 	ports[2] = wiringPiI2CSetup (I2C_ADDR2);
@@ -210,7 +223,7 @@ void main(){
 		//show_display(small_text);		/*Show 128x128 pictures*/
 		//delay(50);
 		show_display(big_text);
-		delay(800);
+		delay(2000);
 		//show_display(picture);
 		//delay(50);
 		printf(".\n");
