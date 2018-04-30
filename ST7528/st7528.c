@@ -79,38 +79,35 @@ void write_command(unsigned char datum)
 
 
  //setPin (A0, 0); //A0=0;									/*Instruction register*/
- data0 = 0b11011011;
- update0();
- delay(1);
 
  //setPin (E, 1);//E=1;									  /*Read inactive*/
- //data0 = 0b11011011;
- //update0();
- //delay(1);
+ data0 &= ~(1<<A0);
+ update0();
+ delay(1);
 
  setPort (datum);
 
  //setPin (CSB, 0);
- data0 = 0b11010011;
+ data0 &= ~(1<<CSB);
  update0();
  delay(1);
 
  //setPin (RW, 0);
- data0 = 0b10010011;
+ data0 &= ~(1<<RW);
  update0();
  delay(1);
 
  //setPin (RW, 1);
- data0 = 0b11010011;
+ data0 |= (1<<RW);
  update0();
  delay(1);
 
  //setPin (CSB, 1);
- data0 = 0b11011011;
+ data0 |= (1<<CSB);
  update0();
  delay(1);
 
- data0 = 0b1111011;
+ data0 |= (1<<A0);
  update0();
  delay(1);
 }
@@ -190,6 +187,10 @@ void main(){
 
 
 #if DEBUG
+
+	data0 = 0xff;
+ 	data0 &= ~(1<<PS2);
+	update0();
 
 	printf("debug\n");
 	while(1) {
