@@ -1,4 +1,4 @@
-#//---------------------------------------------------------
+//---------------------------------------------------------
 /*
 NHD-C128128BZ.c
 Program for writing to Newhaven Display graphic LCD.
@@ -66,7 +66,7 @@ void setPort (uint8_t v) {
 
 void update0 () {
 	//printf("%d\n", data0);
-	//wiringPiI2CWrite (ports[p], data[p]);
+ 	//wiringPiI2CWrite (ports[p], data[p]);
 	wiringPiI2CWrite (fd0, data0);
 
 }
@@ -77,27 +77,38 @@ void update0 () {
 void write_command(unsigned char datum)
 {
 
- setPin (A0, 0); //A0=0;									/*Instruction register*/
- update0();
 
- setPin (E, 1);//E=1;									  /*Read inactive*/
+ //setPin (A0, 0); //A0=0;									/*Instruction register*/
+ data0 = 0b11011011;
  update0();
+ delay(1);
+
+ //setPin (E, 1);//E=1;									  /*Read inactive*/
+ //data0 = 0b11011011;
+ //update0();
+ //delay(1);
 
  setPort (datum);
 
- setPin (CSB, 0);
+ //setPin (CSB, 0);
+ data0 = 0b11010011;
  update0();
-
- setPin (RW, 0);
- update0();
-
  delay(1);
 
- setPin (RW, 1);
+ //setPin (RW, 0);
+ data0 = 0b10010011;
  update0();
+ delay(1);
 
- setPin (CSB, 1);
+ //setPin (RW, 1);
+ data0 = 0b11010011;
  update0();
+ delay(1);
+
+ //setPin (CSB, 1);
+ data0 = 0b11011011;
+ update0();
+ delay(1);
 }
 
 
@@ -151,7 +162,6 @@ void show_display(unsigned char *lcd_string)
 
 
 void main(){
-
 
 	wiringPiSetup();
 	fd0 = wiringPiI2CSetup (I2C_ADDR0);
