@@ -19,8 +19,6 @@ Program for writing to Newhaven Display graphic LCD.
 //#include <at89x51.h>
 #include "picture.h"
 #include <inttypes.h>
-#include <stdlib.h>
-
 //-----------------------------------------------------------
 //#define bus 0//P1
 #define PS0 0
@@ -51,9 +49,9 @@ unsigned char  Ra_Rb;
 
 
 
-#define LOOP 0
-#define STATIC_PINS 0
-#define USE_PCF8575 0
+
+#define STATIC_PINS 1
+#define USE_PCF8575 1
 
 #define I2C_ADDR0 0x20
 #define I2C_ADDR1 0x39
@@ -170,39 +168,28 @@ void show_display(unsigned char *lcd_string)
  unsigned char page;
  unsigned char col;
  unsigned int c=0;
+ for (page=0xB0;page<0xBF;page++)		/*write to page 0 then go to mext page .*/
+ {										/*     128pixels / 8per page = 16 pages    */
+  write_command(page);					/*Set page address*/
 
- uint8_t dat = 0;
+for (col=0; col<32; col++) {
 
- //for (page=0xB0;page<0xBF;page++)		/*write to page 0 then go to mext page .*/
- //{										/*     128pixels / 8per page = 16 pages    */
- // write_command(page);					/*Set page address*/
-
-int cnt = 0;
-for (col=0; col<1; col++) {
-
-  //write_command (0x10);// | (col>>4) );					/*Set column address MSB*/
-  //write_command (0x00);// | (col&0x0f) );					/*Set column address LSB*/
+  write_command (0x10 | (col>>4) );					/*Set column address MSB*/
+  write_command (0x00 | (col&0x0f) );					/*Set column address LSB*/
 
   //for(col=0;col<32;col++)				/*each page has 128 pixel columns*/ 
   //{
    //write_data(*lcd_string);				/*16 level grayscale; write each byte 4 times*/
    //write_data(*lcd_string);
    //write_data(*lcd_string);
-   dat = *lcd_string++;
-   dat = 3;
-   //if (col>2) dat = 0;
-   //else dat = 1;
-
-   write_data (dat);
-   //write_data (dat);
-   //write_data (dat);
-   //write_data (dat);
-   cnt++;
-
+   uint8_t dat = *lcd_string++;
+   //if (col%2) dat = 0;
+   write_data(dat);			/*increment to next byte of data*/
+   //write_data(dat);			/*increment to next byte of data*/
+   //write_data(dat);			/*increment to next byte of data*/
+   //write_data(dat);			/*increment to next byte of data*/
   }
-// }
-
-printf("wrote %d cols\n", cnt);
+ }
 }
 
 
@@ -256,13 +243,12 @@ void main(){
 
 	printf("loop\n");
 	lcd_init();						/*Initialize the LCD controller*/
-	show_display(big_text);
 
-	while (LOOP){
+	for(;;){
 		//lcd_init();						/*Initialize the LCD controller*/
 		//show_display(small_text);		/*Show 128x128 pictures*/
 		//delay(50);
-		show_display(picture);
+		show_display(big_text);
 		delay(2000);
 		//show_display(picture);
 		//delay(50);
