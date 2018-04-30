@@ -50,7 +50,8 @@ unsigned char  Ra_Rb;
 
 
 
-#define USE_PCF8575 0
+#define STATIC_PINS 1
+#define USE_PCF8575 1
 
 #define I2C_ADDR0 0x20
 #define I2C_ADDR1 0x39
@@ -199,12 +200,37 @@ void main(){
 	wiringPiSetup();
 	setPin (PS0, 1);
 
+
 #if USE_PCF8575
 	ports[2] = wiringPiI2CSetup (I2C_ADDR2);
 #else
 	ports[0] = wiringPiI2CSetup (I2C_ADDR0);
 	ports[1] = wiringPiI2CSetup (I2C_ADDR1);
 #endif
+
+
+
+
+#if STATIC_PINS
+
+	setPin (0, 0);
+	setPin (1, 0);
+	setPin (2, 0);
+	setPin (3, 0);
+	setPin (4, 0);
+	setPin (5, 0);
+	setPin (6, 0);
+	setPin (7, 0);
+
+	setPort (0x55);
+	update(0);
+
+
+	printf("%d %d\n", data[0], data[1]);
+
+	return 0;
+#endif
+
 
 	setPin (RST, 1); //RST=1;
 	delay(1);
