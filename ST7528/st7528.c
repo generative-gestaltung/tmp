@@ -36,12 +36,58 @@ unsigned char  vopcode;
 unsigned char  Ra_Rb;
 
 
-#define I2C_ADDR0 0x21
-//#define I2C_ADDR1 0x39
+#define NULL 0
+#define I2C_SMBUS 0x0720
+#define I2C_SMBUS_READ 1
+#define I2C_SMBUS_WRITE 0
+#define I2C_SMBUS_BYTE 1
+#define I2C_SMBUS_BYTE_DATA 2
+#define I2C_SMBUS_WORD_DATA 3
 
 
-int ports[2];
+
+
+#define USE_PCF8575 1
+
+#define I2C_ADDR0 0x20
+#define I2C_ADDR1 0x39
+#define I2C_ADDR2 0x21
+
+
+/*
+union i2c_smbus_data {
+	uint8_t data;
+	uint16_t word;
+	uint8_t block[32];
+};
+*/
+struct i2c_smbus_ioctl_data {
+	char read_write;
+	uint8_t command;
+
+	int size;
+	union i2c_smbus_data* data;
+};
+
+
+
+int i2c_smbus_access (int fd, char rw, uint8_t cmd, int size, union i2c_smbus_data* data) {
+
+	struct i2c_smbus_ioctl_data args;
+	args.read_write = rw;
+	args.command    = cmd;
+	args.size       = size;
+	args.data       = data;
+
+	return ioctl (fd, I2C_SMBUS, &args);
+
+}
+
+
+int ports[3];
 uint8_t data[2];
+
+uint16_t port_value = 0x0000;
 
 
 void setPin (int pin, int v) {
@@ -64,8 +110,14 @@ void setPort (uint8_t v) {
 void update (int p) {
 	//printf("%d\n", data[p]);
 	//wiringPiI2CWrite (ports[p], data[p]);
-	wiringPiI2CWriteReg16 (ports[0], 0, data[1]<<8 | data[0]);
 
+#if USE_PCF8575
+	//i2c_smbus_access (ports[0], I2C_SMBUS_WRITE, data, I2C_SMBUS_BYTE, NULL);
+	wiringPiI2CWriteReg8 (ports[2], data[0], data[1]);
+
+#else
+	i2c_smbus_access (ports[p], I2C_SMBUS_WRITE, data[p], I2C_SMBUS_BYTE, NULL);
+#endif
 }
 
 //------------------------------------------------------------
@@ -133,9 +185,13 @@ void main(){
 
 
 	wiringPiSetup();
-	ports[0] = wiringPiI2CSetup (I2C_ADDR0);
-	//ports[1] = wiringPiI2CSetup (I2C_ADDR1);
 
+#if USE_PCF8575
+	ports[2] = wiringPiI2CSetup (I2C_ADDR2);
+#else
+	ports[0] = wiringPiI2CSetup (I2C_ADDR0);
+	ports[1] = wiringPiI2CSetup (I2C_ADDR1);
+#endif
 
 	setPin (RST, 1); //RST=1;
 	delay(1);
