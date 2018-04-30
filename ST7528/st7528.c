@@ -38,6 +38,7 @@ void write_data(unsigned char datum);
 unsigned char  vopcode;
 unsigned char  Ra_Rb;
 
+#define DEBUG 1
 
 #define I2C_ADDR0 0x22
 #define I2C_ADDR1 0x39
@@ -90,6 +91,8 @@ void write_command(unsigned char datum)
  setPin (RW, 0);
  update0();
 
+ delay(1);
+
  setPin (RW, 1);
  update0();
 
@@ -114,6 +117,7 @@ void write_data(unsigned char datum)
  setPin (RW, 0); //RW=0;
  update0();
 
+ delay(0);
 
  setPin (RW, 1); //RW=1;
  update0();
@@ -168,6 +172,20 @@ void main(){
 	setPin (RST, 1);
 	update0();
 	delay(1);
+
+
+
+#if DEBUG
+
+	printf("debug\n");
+	while(1) {
+
+		write_command(0x55);
+	}
+
+#endif
+
+
 	vopcode=45;							/*Electronic volumn setting*/
 	Ra_Rb=0x27;							/*Internal resistance ratio*/
 
