@@ -40,7 +40,7 @@ unsigned char  Ra_Rb;
 
 #define DEBUG 1
 
-#define I2C_ADDR0 0x22
+#define I2C_ADDR0 0x38
 #define I2C_ADDR1 0x39
 
 int fd0, fd1;
