@@ -109,6 +109,10 @@ void write_command(unsigned char datum)
  data0 = 0b11011011;
  update0();
  delay(1);
+
+ data0 = 0b1111011;
+ update0();
+ delay(1);
 }
 
 
