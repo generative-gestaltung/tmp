@@ -7,6 +7,7 @@ StateInp _stateInp;
 
 #define TWO_PI 6.283185307
 
+int sequence[16] = {1,3,1,12,5,5,1,12,1,3,1,12,5,5,1,12};
 
 
 typedef struct Rand {
@@ -16,13 +17,13 @@ typedef struct Rand {
 	float A;
 } Rand;
 
-
 typedef struct Clock {
 	float v;
 	int cnt;
 	int ds;
+	float lastV;
+	int cntSeq;
 } Clock;
-
 
 typedef struct Lfo {
 	float p;
@@ -50,7 +51,10 @@ Rand rand0 = {
 Clock clock0 = {
 	.v = 0.0,
 	.cnt = 0,
-	.ds = 0x7fff
+	.ds = 0x1fff,
+	.lastV = 0.0,
+	.cnt = 0,
+	.cntSeq = 0
 };
 
 int sign (float x) {
@@ -58,14 +62,17 @@ int sign (float x) {
 	else return 1;
 }
 
-
-
 void updateClock (Clock* clock, float dt) {
 	clock->cnt = (clock->cnt+1) % (clock->ds);
 	if (clock->cnt == 0)
 		clock->v = 1;
 	if (clock->cnt == clock->ds/2)
 		clock->v = 0;
+
+	if (clock->v == 1.0 && clock->lastV == 0.0) {
+		clock->cntSeq = (clock->cntSeq+1)%16;
+	}
+	clock->lastV = clock->v;
 }
 
 void updateRand (Rand* rnd, float dt) {
@@ -97,26 +104,24 @@ void Patch_init (State* state) {
 
 void Patch_updateInp (StateInp* state) {
 	memcpy (&_stateInp, state, sizeof(StateInp));
-	lfo0.f = _stateInp.encoders[0] / 255.;
-	lfo0.A = _stateInp.encoders[1] / 255.;
-	lfo0.w = (int)(_stateInp.encoders[2] / 64);
-	rand0.ds = _stateInp.encoders[4]+1;
-	rand0.A = _stateInp.encoders[5] / 255.;
-
-	clock0.ds = 0xffff - _stateInp.encoders[8] * 0xff;
+	int i;
+	for (i=0; i<16; i++) {
+		sequence[i] = _stateInp.encoders[i];
+	}
 }
 
 
 void Patch_update (State* state) {
 
-	updateLfo (&lfo0, 0.01);
-	updateRand (&rand0, 0.01);
+	//updateLfo (&lfo0, 0.01);
+	//updateRand (&rand0, 0.01);
 	updateClock (&clock0, 0.01);
 
-	state->cvOut[0] = (int)(lfo0.v * 65335);
-	state->cvOut[1] = (int)(rand0.v * 65335);
-	state->cvOut[2] = fmod (state->cvOut[2] + 0.3, 4096);
-	state->cvOut[3] = fmod (state->cvOut[3] + 0.04, 4096);
+	state->cvOut[0] = sequence[clock0.cntSeq] * 0x00ff;
+	//state->cvOut[1] = (int)(rand0.v * 65335);
+	//state->cvOut[2] = fmod (state->cvOut[2] + 0.3, 4096);
+	//state->cvOut[3] = fmod (state->cvOut[3] + 0.04, 4096);
 
 	state->trOut[0] = clock0.v;
+	state->encLeds = (1<<clock0.cntSeq);
 }

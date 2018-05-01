@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "dac.h"
 #include "matrix.h"
@@ -12,33 +13,43 @@
 #define DEBUG 0
 
 
-StateInp stateInp;
+StateInp stateInp1;
+State state1;
+
 uint8_t I2C_LED_PORTS[4] = {
 	0x40, 0x41, 0x42, 0x43
 };
 
+int lastTrOut[4] = {0,0,0,0};
+
 uint8_t i2c_led_fd [4];
+char PATCH = '0';
 
 
-
-void *inc_x(void *x_void_ptr) {
+void *readMatrix (void *x_void_ptr) {
 
 	int *x_ptr = (int *)x_void_ptr;
 	int cnt = 0;
 	Matrix_init();
+	char lastPatch = '0';
 
 	while(1) {
 		//delay(1);
 		Matrix_update();
-		if (!cnt) {
-			printf("%d %d %d %d\n", encoders[0].v, encoders[1].v, encoders[2].v, encoders[3].v);
-		}
 		cnt = (cnt+1)%1024;
+	}
+	return NULL;
+}
 
-/*
+
+void *writeLeds (void* x) {
+
+	int cnt = 0;
+
+	while(1) {
+		int i;
 		for (i=0; i<4; i++) {
-			int tr = state0.trOut[i];
-			triggerOut (i, tr);
+			int tr = state1.trOut[i];
 			if (tr != lastTrOut[i]) {
 				lastTrOut[i] = tr;
 				if (tr) {
@@ -46,20 +57,22 @@ void *inc_x(void *x_void_ptr) {
 				}
 				else {
 					allOn (3);
-					//set (3, 16+2*i, 0x0fff);
+					set (3, 16+2*i, 0x0fff);
 				}
 			}
 		}
 
 		for (int i=0; i<16; i++) {
-			if ((state0.encLeds>>i) & 0x01) {
-				set(0, (i%4)*2, 0x0fff);
+			int row = i/8;
+			if ((state1.encLeds>>i) & 0x01) {
+				set (row, (i%8)*4+2, 2000);
+				set (row, (i%8)*4, 1000);
 			}
 			else {
-				set(0, (i%4)*2, 00);
+				set (row, (i%8)*4, 0);
+				set (row, (i%8)*4+2, 0);
 			}
 		}
-*/
 	}
 
 	return NULL;
@@ -73,8 +86,14 @@ void init_pca9685 (int ch, int openDrain) {
 
 	int x = 0, y = 0;
 
-	pthread_t inc_x_thread;
-	if(pthread_create(&inc_x_thread, NULL, inc_x, &x)) {
+	pthread_t matrix_thread, led_thread;
+
+	if(pthread_create(&matrix_thread, NULL, readMatrix, &x)) {
+		fprintf(stderr, "Error creating thread\n");
+		return 1;
+	}
+
+	if(pthread_create(&led_thread, NULL, writeLeds, &y)) {
 		fprintf(stderr, "Error creating thread\n");
 		return 1;
 	}
@@ -151,10 +170,12 @@ void set (int ch, int pin, int v) {
 
 
 
-int main() {
 
+int main (int argc, char** argv) {
+
+	PATCH = argv[1][0];
 	int i;
-
+	printf("START %c\n", PATCH);
 	DAC8564_Init();
 	DAC8564_Write (0, 4000);
 
@@ -185,25 +206,49 @@ int main() {
 	uint16_t V = 0;
 	int cnt = 0;
 
-	//xxx
+	clock_t t0, t1;
+    	t0 = clock();
+	long time = 0;
 
-	int lastTrOut[4] = {0,0,0,0};
+
 	while(1) {
 
+
+   		t1 = clock();
+		int dt = (t1-t0); //)/CLOCKS_PER_SEC;
+		t0 = t1;
+		time += dt;
+
 		if (!cnt) {
-			for (i=0; i<16; i++) {
-				stateInp.encoders[i] = encoders[i].v;
-			}
-			Patch_updateInp (&stateInp);
+			//printf("%d\n", time);
 		}
+		if (time > 100) {
+			time -= 100;
+			//printf("%d \n", time);
+			for (i=0; i<16; i++) {
+				stateInp1.encoders[i] = encoders[i].v;
+			}
 
-		Patch_update (&state0);
+			if (PATCH=='s')
+				Patch_updateInpSEQ (&stateInp1);
+			else
+				Patch_updateInpLFO (&stateInp1);
+			memcpy (&state1, &state0, sizeof(State));
 
+			if (PATCH=='s')
+				Patch_updateSEQ (&state0);
+			else
+				Patch_updateLFO (&state0);
+		}
 		DAC8564_Write (CHANNEL_A, state0.cvOut[0]);
 		DAC8564_Write (CHANNEL_B, state0.cvOut[1]);
 		DAC8564_Write (CHANNEL_C, state0.cvOut[2]);
 		DAC8564_Write (CHANNEL_D, state0.cvOut[3]);
 
+		triggerOut (0, state0.trOut[0]);
+		triggerOut (1, state0.trOut[1]);
+		triggerOut (2, state0.trOut[2]);
+		triggerOut (3, state0.trOut[3]);
 
 		cnt = (cnt+1) % 1024;
 		//delay(1);
