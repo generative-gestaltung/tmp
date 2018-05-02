@@ -21,13 +21,10 @@ uint8_t I2C_LED_PORTS[4] = {
 };
 
 int lastTrOut[4] = {0,0,0,0};
-
 uint8_t i2c_led_fd [4];
-
 
 char PATCH = 's';
 char NEW_PATCH = 's';
-
 
 void *fileFunc (void *x_void_ptr) {
 
@@ -59,7 +56,6 @@ void *fileFunc (void *x_void_ptr) {
 		printf("%c %c\n", buf[0], NEW_PATCH);
 		close(f);
 		delay(500);
-
 	}
 }
 
@@ -69,10 +65,8 @@ void *fileFunc (void *x_void_ptr) {
 
 void *mainFunc (void *x) {
 
-
 	int i;
 	while(1) {
-
 		delay(1);
 		for (i=0; i<16; i++) {
 			stateInp1.encoders[i] = encoders[i].v;
@@ -113,13 +107,30 @@ void *readMatrix (void *x_void_ptr) {
 	while(1) {
 		//delay(1);
 		Matrix_update();
-		cnt = (cnt+1)%1024;
+		cnt = (cnt+1) % 1024;
 	}
 	return NULL;
 }
 
 
 void *writeLeds (void* x) {
+
+	init_pca9685 (0, 0);
+	init_pca9685 (1, 0);
+	init_pca9685 (2, 0);
+	init_pca9685 (3, 1);
+
+	allOff (0);
+	allOff (1);
+	allOff (2);
+	allOn (3);
+
+	int i;
+	wiringPiSetup();
+	for (i=0; i<4; i++) {
+		i2c_led_fd[i] = wiringPiI2CSetup (I2C_LED_PORTS[i]);
+	}
+
 
 	int cnt = 0;
 
@@ -158,9 +169,6 @@ void *writeLeds (void* x) {
 
 
 void init_pca9685 (int ch, int openDrain) {
-
-
-
 
 	int fd = i2c_led_fd[ch];
 
@@ -217,7 +225,6 @@ void allOn (int ch) {
 void set (int ch, int pin, int v) {
 
 	int addr = i2c_led_fd[ch];
-
 	uint8_t on = 0x06 + pin*2;
 	uint8_t off = 0x08 + pin*2;
 
@@ -242,7 +249,6 @@ int main (int argc, char** argv) {
 
 
 	DAC8564_Init();
-	wiringPiSetup();
 
 
 	int x = 0, y = 0, z=0,w=0;
@@ -256,27 +262,12 @@ int main (int argc, char** argv) {
 	}
 */
 
-	for (i=0; i<4; i++) {
-		i2c_led_fd[i] = wiringPiI2CSetup (I2C_LED_PORTS[i]);
-
-#if DEBUG
-		printf("init %d\n", i2c_led_fd[i]);
-#endif
-	}
-
 
 	Patch_init (&state0);
-
-	init_pca9685 (0, 0);
-	init_pca9685 (1, 0);
-	init_pca9685 (2, 0);
-	init_pca9685 (3, 1);
+	Matrix_init();
 
 	printf("init done\n");
-	allOff (0);
-	allOff (1);
-	allOff (2);
-	allOn (3);
+
 
 	if(pthread_create (&matrix_thread, NULL, readMatrix, &y)) {
 		fprintf(stderr, "Error creating thread\n");
@@ -296,25 +287,21 @@ int main (int argc, char** argv) {
 
 	uint16_t V = 0;
 	int cnt = 0;
-
+/*
 	clock_t t0, t1;
     	t0 = clock();
 	long time = 0;
-
+*/
 
 	while(1) {
 
 		//delay(1);
-
-
+/*
    		t1 = clock();
 		int dt = (t1-t0); //)/CLOCKS_PER_SEC;
 		t0 = t1;
 		time += dt;
-
-		if (!cnt) {
-			//printf("%d\n", time);
-		}
+*/
 
 		for (i=0; i<16; i++) {
 			stateInp1.encoders[i] = encoders[i].v;
@@ -331,12 +318,10 @@ int main (int argc, char** argv) {
 
 		if (PATCH=='s') {
 			Patch_updateSEQ (&state0);
-			state0.cvOut[0] = 0x0000;
 
 		}
 		else {
 			Patch_updateLFO (&state0);
-			state0.cvOut[0] = 0xffff;
 		}
 
 
@@ -351,94 +336,8 @@ int main (int argc, char** argv) {
 		triggerOut (3, state0.trOut[3]);
 
 		cnt = (cnt+1) % 10000;
-
 	}
-
-
 
 	printf("done\n");
 	return 0;
 }
-
-
-
-/*
-cnt = 0
-p2 = 0
-while True :
-
-
-
-	time.sleep(0.05)
-
-
-	allOn (0x40)
-	allOn (0x41)
-	allOn (0x42)
-	allOn (0x43)
-
-	'''
-
-
-	N = int(math.floor(random.random()*4))
-
-	for i in range(0,N):
-		p = int(math.floor(random.random()*8))
-		#set (0x40, cnt*4, 0)
-		set (0x40, p*4+2, 2000)
-		set (0x40, p*4, 1000)
-
-	set (0x41, p2*4+2, 2000)
-	set (0x41, p2*4, 1000)
-
-	p2 = (p2 + 1 )%8
-
-	set (0x43, 16+(p2%4)*2, 2000)
-	set (0x43, 28, 4000)
-	set (0x43, 30, 4000)
-	#set (0x40, 4, 2000)
-	#set (0x40, 8, 2000)
-	#set (0x40, 12, 2000)
-
-	#set (0x40, 16, 2000)
-
-	#set (0x41, 0, 2000)
-	#set (0x41, 4, 2000)
-	#set (0x41, 8, 2000)
-	#set (0x41, 12, 2000)
-
-	time.sleep(0.2)
-	'''
-
-    while(1) {
-
-        if(tmp==0) {
-     			Write_DAC8532(0x30, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x30)
-    			Write_DAC8532(0x34, Voltage_Convert(5.0,5.000-(float)i/10));    	//Write channel B buffer (0x34)		
-    			i++;
-
-			if(i==50) {
-				i=0;
-				 tmp=1;
-			bsp_DelayUS(500);
-     	}
-
-        else if(tmp==1) {
-			Write_DAC8532(0x30, Voltage_Convert(5.0,5.000-(float)i/10));    	//Write channel B buffer (0x30)	
-			Write_DAC8532(0x34, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x34)
-
-    			i++;
-			if(i==50) {
-			    i=0;
-			    tmp=0;
-			}
-			bsp_DelayUS(500);
-        }
-    }
-
-    bcm2835_spi_end();
-    bcm2835_close();
-
-    return 0;
-}
-*/
