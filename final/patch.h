@@ -11,6 +11,8 @@
 #define WAVE_RAMP 2
 #define WAVE_RECT 3
 
+
+uint8_t gui_params[32];
 typedef struct Rand {
 	float v;
 	int cnt;

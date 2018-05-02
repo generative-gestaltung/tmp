@@ -21,7 +21,7 @@ Rand rand1 = {
 Clock clock1 = {
 	.v = 0.0,
 	.lastV = 0.0,
-	.ds = 0x06ff,
+	.ds = 0x1fff,
 	.cnt = 0
 };
 
@@ -39,6 +39,8 @@ void Patch_updateInpSEQ (StateInp* stateInp) {
 
 void Patch_updateSEQ (State* state) {
 
+	int len = gui_params[8];
+	if (len==0) len=1;
 	int sequence[16] = { 20, 24, 25, 32,
                      22, 42, 20, 40,
 		     35, 50, 33, 50,
@@ -47,7 +49,7 @@ void Patch_updateSEQ (State* state) {
 
 	updateClock (&clock1, 0.01);
 	if (clock1.v ==1 && clock1.lastV ==0)
-		step = (step+1)%16;
+		step = (step+1) % len;
 
 	state->cvOut[0] = sequence[step] * 600;
 	state->trOut[0] = clock1.v;

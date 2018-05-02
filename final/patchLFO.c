@@ -27,8 +27,8 @@ Clock clock0 = {
 void Patch_updateInpLFO (StateInp* stateInp) {
 
 	//memcpy (&_stateInp, state, sizeof(StateInp));
-	lfo0.f = stateInp->encoders[0] / 255.;
-	lfo0.A = stateInp->encoders[1] / 255.;
+	lfo0.f = 0.2; //stateInp->encoders[0] / 255.;
+	lfo0.A = 1.0; //stateInp->encoders[1] / 255.;
 	lfo0.w = (int)(stateInp->encoders[2] / 64);
 	rand0.ds = stateInp->encoders[4]+1;
 	rand0.A = stateInp->encoders[5] / 255.;

@@ -23,7 +23,84 @@ uint8_t I2C_LED_PORTS[4] = {
 int lastTrOut[4] = {0,0,0,0};
 
 uint8_t i2c_led_fd [4];
-char PATCH = '0';
+
+
+char PATCH = 's';
+char NEW_PATCH = 's';
+
+
+void *fileFunc (void *x_void_ptr) {
+
+	while(1) {
+
+		FILE* f = fopen("/home/maxg/dev/tmp/final/xxx", "rb");
+		int i;
+    		size_t lSize;
+    		fseek (f , 0 , SEEK_END);
+    		lSize = ftell (f);
+    		rewind (f);
+
+		uint8_t buf[2];
+    		for (i=0; i<lSize/2; i++) {
+			fread (&buf, 1, 2, f);
+			printf("%d %d\n", buf[0], buf[1]);
+			gui_params[buf[0]] = buf[1];
+		}
+   		close(f);
+
+		delay(500);
+
+		f = fopen("/home/maxg/dev/tmp/final/yyy", "r");
+		fread (&buf, 1, 1, f);
+
+		NEW_PATCH = buf[0];
+		PATCH = buf[0];
+
+		printf("%c %c\n", buf[0], NEW_PATCH);
+		close(f);
+		delay(500);
+
+	}
+}
+
+
+
+
+
+void *mainFunc (void *x) {
+
+
+	int i;
+	while(1) {
+
+		delay(1);
+		for (i=0; i<16; i++) {
+			stateInp1.encoders[i] = encoders[i].v;
+		}
+
+		if (PATCH=='s')
+			Patch_updateInpSEQ (&stateInp1);
+		else
+			Patch_updateInpLFO (&stateInp1);
+
+		memcpy (&state1, &state0, sizeof(State));
+
+		if (PATCH=='s')
+			Patch_updateSEQ (&state0);
+		else
+			Patch_updateLFO (&state0);
+
+		DAC8564_Write (CHANNEL_A, state0.cvOut[0]);
+		DAC8564_Write (CHANNEL_B, state0.cvOut[1]);
+		DAC8564_Write (CHANNEL_C, state0.cvOut[2]);
+		DAC8564_Write (CHANNEL_D, state0.cvOut[3]);
+
+		triggerOut (0, state0.trOut[0]);
+		triggerOut (1, state0.trOut[1]);
+		triggerOut (2, state0.trOut[2]);
+		triggerOut (3, state0.trOut[3]);
+	}
+}
 
 
 void *readMatrix (void *x_void_ptr) {
@@ -84,19 +161,6 @@ void init_pca9685 (int ch, int openDrain) {
 
 
 
-	int x = 0, y = 0;
-
-	pthread_t matrix_thread, led_thread;
-
-	if(pthread_create(&matrix_thread, NULL, readMatrix, &x)) {
-		fprintf(stderr, "Error creating thread\n");
-		return 1;
-	}
-
-	if(pthread_create(&led_thread, NULL, writeLeds, &y)) {
-		fprintf(stderr, "Error creating thread\n");
-		return 1;
-	}
 
 	int fd = i2c_led_fd[ch];
 
@@ -173,13 +237,24 @@ void set (int ch, int pin, int v) {
 
 int main (int argc, char** argv) {
 
-	PATCH = argv[1][0];
 	int i;
 	printf("START %c\n", PATCH);
-	DAC8564_Init();
-	DAC8564_Write (0, 4000);
 
+
+	DAC8564_Init();
 	wiringPiSetup();
+
+
+	int x = 0, y = 0, z=0,w=0;
+
+	pthread_t matrix_thread, led_thread, main_thread, file_thread;
+
+/*
+	if(pthread_create(&main_thread, NULL, mainFunc, &x)) {
+		fprintf(stderr, "Error creating thread\n");
+		return 1;
+	}
+*/
 
 	for (i=0; i<4; i++) {
 		i2c_led_fd[i] = wiringPiI2CSetup (I2C_LED_PORTS[i]);
@@ -203,6 +278,22 @@ int main (int argc, char** argv) {
 	allOff (2);
 	allOn (3);
 
+	if(pthread_create (&matrix_thread, NULL, readMatrix, &y)) {
+		fprintf(stderr, "Error creating thread\n");
+		return 1;
+	}
+
+	if(pthread_create (&led_thread, NULL, writeLeds, &z)) {
+		fprintf(stderr, "Error creating thread\n");
+		return 1;
+	}
+
+	if(pthread_create (&file_thread, NULL, fileFunc, &w)) {
+		fprintf(stderr, "Error creating thread\n");
+		return 1;
+	}
+
+
 	uint16_t V = 0;
 	int cnt = 0;
 
@@ -213,6 +304,8 @@ int main (int argc, char** argv) {
 
 	while(1) {
 
+		//delay(1);
+
 
    		t1 = clock();
 		int dt = (t1-t0); //)/CLOCKS_PER_SEC;
@@ -222,24 +315,31 @@ int main (int argc, char** argv) {
 		if (!cnt) {
 			//printf("%d\n", time);
 		}
-		if (time > 100) {
-			time -= 100;
-			//printf("%d \n", time);
-			for (i=0; i<16; i++) {
-				stateInp1.encoders[i] = encoders[i].v;
-			}
 
-			if (PATCH=='s')
-				Patch_updateInpSEQ (&stateInp1);
-			else
-				Patch_updateInpLFO (&stateInp1);
-			memcpy (&state1, &state0, sizeof(State));
-
-			if (PATCH=='s')
-				Patch_updateSEQ (&state0);
-			else
-				Patch_updateLFO (&state0);
+		for (i=0; i<16; i++) {
+			stateInp1.encoders[i] = encoders[i].v;
 		}
+
+		if (PATCH=='s') {
+			Patch_updateInpSEQ (&stateInp1);
+		}
+		else {
+			Patch_updateInpLFO (&stateInp1);
+		}
+
+		memcpy (&state1, &state0, sizeof(State));
+
+		if (PATCH=='s') {
+			Patch_updateSEQ (&state0);
+			state0.cvOut[0] = 0x0000;
+
+		}
+		else {
+			Patch_updateLFO (&state0);
+			state0.cvOut[0] = 0xffff;
+		}
+
+
 		DAC8564_Write (CHANNEL_A, state0.cvOut[0]);
 		DAC8564_Write (CHANNEL_B, state0.cvOut[1]);
 		DAC8564_Write (CHANNEL_C, state0.cvOut[2]);
@@ -250,8 +350,8 @@ int main (int argc, char** argv) {
 		triggerOut (2, state0.trOut[2]);
 		triggerOut (3, state0.trOut[3]);
 
-		cnt = (cnt+1) % 1024;
-		//delay(1);
+		cnt = (cnt+1) % 10000;
+
 	}
 
 
