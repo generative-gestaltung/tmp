@@ -9,16 +9,13 @@ int sign (float x) {
 }
 
 void updateClock (Clock* clock, float dt) {
-	clock->cnt = (clock->cnt+1) % (clock->ds);
-	if (clock->cnt == 0)
-		clock->v = 1;
-	if (clock->cnt == clock->ds/2)
-		clock->v = 0;
-
-	if (clock->v == 1.0 && clock->lastV == 0.0) {
-		clock->cntSeq = (clock->cntSeq+1)%16;
-	}
+	clock->cnt++;
 	clock->lastV = clock->v;
+
+	if ((clock->cnt%clock->ds) < clock->ds/2)
+		clock->v = 1;
+	else
+		clock->v = 0;
 }
 
 void updateRand (Rand* rnd, float dt) {

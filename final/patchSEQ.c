@@ -20,29 +20,36 @@ Rand rand1 = {
 
 Clock clock1 = {
 	.v = 0.0,
-	.cnt = 0,
-	.ds = 0x0fff,
 	.lastV = 0.0,
-	.cnt = 0,
-	.cntSeq = 0
+	.ds = 0x06ff,
+	.cnt = 0
 };
 
-int sequence[16] = {1,2,3,6,1,2,3,1,1,2,3,4,1,2,3,1};
+int step = 0;
 
 void Patch_updateInpSEQ (StateInp* stateInp) {
 	//memcpy (&_stateInp, state, sizeof(StateInp));
 	int i;
-	for (i=0; i<16; i++) {
-		sequence[i] = stateInp->encoders[i];
-	}
+	//for (i=0; i<16; i++) {
+		//sequence[i] = stateInp->encoders[i];
+	//#}
 }
+
 
 
 void Patch_updateSEQ (State* state) {
 
-	updateClock (&clock1, 0.01);
-	state->cvOut[0] = sequence[clock1.cntSeq] * 0x00ff;
+	int sequence[16] = { 20, 24, 25, 32,
+                     22, 42, 20, 40,
+		     35, 50, 33, 50,
+                     50, 60, 70, 80};
 
+
+	updateClock (&clock1, 0.01);
+	if (clock1.v ==1 && clock1.lastV ==0)
+		step = (step+1)%16;
+
+	state->cvOut[0] = sequence[step] * 600;
 	state->trOut[0] = clock1.v;
-	state->encLeds = (1<<clock1.cntSeq);
+	state->encLeds = (1<<step);
 }

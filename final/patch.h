@@ -24,7 +24,6 @@ typedef struct Clock {
 	int cnt;
 	int ds;
 	float lastV;
-	int cntSeq;
 } Clock;
 
 
