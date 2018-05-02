@@ -74,7 +74,6 @@ int cnt = 0;
 
 void Matrix_update() {
 
-
 	if (row==0) {
 		bcm2835_gpio_write (PIN_Y0, HIGH);
 		bcm2835_gpio_write (PIN_Y1, LOW);
@@ -82,6 +81,7 @@ void Matrix_update() {
 		bcm2835_gpio_write (PIN_Y3, LOW);
 	}
 
+/*
 	if (row==1) {
 		bcm2835_gpio_write (PIN_Y0, LOW);
 		bcm2835_gpio_write (PIN_Y1, HIGH);
@@ -102,8 +102,8 @@ void Matrix_update() {
 		bcm2835_gpio_write (PIN_Y2, LOW);
 		bcm2835_gpio_write (PIN_Y3, HIGH);
 	}
-
-	delay(1);
+*/
+	usleep(1000);
 	x[0] = bcm2835_gpio_lev (PIN_X0);
 	x[1] = bcm2835_gpio_lev (PIN_X1);
 	x[2] = bcm2835_gpio_lev (PIN_X2);
@@ -115,13 +115,13 @@ void Matrix_update() {
 
 
 	updateEnc (&encoders[row*4+0], x[1]<<1 | x[0]);
-	updateEnc (&encoders[row*4+1], x[3]<<1 | x[2]);
-	updateEnc (&encoders[row*4+2], x[5]<<1 | x[4]);
-	updateEnc (&encoders[row*4+3], x[7]<<1 | x[6]);
+	//updateEnc (&encoders[row*4+1], x[3]<<1 | x[2]);
+	//updateEnc (&encoders[row*4+2], x[5]<<1 | x[4]);
+	//updateEnc (&encoders[row*4+3], x[7]<<1 | x[6]);
 
 	row = (row+1) % 4;
 
-/*
+
 	cnt = (cnt+1)%256;
 	if (!cnt) {
 		printf("%d %d %d %d \n", encoders[0].v, encoders[1].v, encoders[2].v, encoders[3].v);
@@ -130,5 +130,5 @@ void Matrix_update() {
 		printf("%d %d %d %d \n", encoders[12].v, encoders[13].v, encoders[14].v, encoders[15].v);
 		printf("\n");
 	}
-*/
+
 }

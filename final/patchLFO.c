@@ -26,7 +26,6 @@ Clock clock0 = {
 
 
 
-	
 void Patch_updateInpLFO (StateInp* stateInp) {
 
 	//memcpy (&_stateInp, state, sizeof(StateInp));
