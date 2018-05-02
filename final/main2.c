@@ -24,10 +24,11 @@ uint8_t I2C_LED_PORTS[4] = {
 int lastTrOut[4] = {0,0,0,0};
 
 uint8_t i2c_led_fd [4];
-char PATCH = 's';
-char NEW_PATCH = 's';
+char PATCH = '0';
+char NEW_PATCH = '0';
 
-void *fileFunc (void *x_void_ptr) {
+void *readFile (void *x_void_ptr) {
+
 
 	while(1) {
 		//printf(".\n");
@@ -60,7 +61,7 @@ void *fileFunc (void *x_void_ptr) {
 }
 
 
-void *matrixFunc (void *x_void_ptr) {
+void *readMatrix (void *x_void_ptr) {
 
 	int *x_ptr = (int *)x_void_ptr;
 	int cnt = 0;
@@ -75,7 +76,7 @@ void *matrixFunc (void *x_void_ptr) {
 }
 
 
-void *ledFunc (void* x) {
+void *writeLeds (void* x) {
 
 	init_pca9685 (0, 0);
 	init_pca9685 (1, 0);
@@ -129,9 +130,10 @@ void *mainFunc (void* x) {
 	int i;
 	int cnt = 0;
 
-	DAC8564_Init();
+	//DAC8564_Init();
 
 
+/*
 	while(1) {
 
 		usleep(10);
@@ -165,10 +167,11 @@ void *mainFunc (void* x) {
 		}
 
 		if (!(cnt%100)) {
-		DAC8564_Write (CHANNEL_A, state0.cvOut[0]);
-		DAC8564_Write (CHANNEL_B, state0.cvOut[1]);
-		DAC8564_Write (CHANNEL_C, state0.cvOut[2]);
-		DAC8564_Write (CHANNEL_D, state0.cvOut[3]);
+		printf(".\n");
+		DAC8564_Write (CHANNEL_A, 0x00ff); //state0.cvOut[0]);
+		DAC8564_Write (CHANNEL_B, 0x0ff); //state0.cvOut[1]);
+		DAC8564_Write (CHANNEL_C, 0x0000); //state0.cvOut[2]);
+		DAC8564_Write (CHANNEL_D, 0xffff); //state0.cvOut[3]);
 
 		triggerOut (0, state0.trOut[0]);
 		triggerOut (1, state0.trOut[1]);
@@ -176,6 +179,7 @@ void *mainFunc (void* x) {
 		triggerOut (3, state0.trOut[3]);
 		}
 	}
+*/
 }
 
 void init_pca9685 (int ch, int openDrain) {
@@ -255,7 +259,7 @@ void set (int ch, int pin, int v) {
 
 int main (int argc, char** argv) {
 
-	int i;
+
 	wiringPiSetup();
 
 	for (i=0; i<4; i++) {
@@ -273,19 +277,7 @@ int main (int argc, char** argv) {
 
 
 	int x=0, y=0, z=0, w=0;
-	pthread_t main_thread, led_thread, file_thread;
-
-	if (pthread_create (&main_thread, NULL, mainFunc, &x)) {
-		fprintf(stderr, "Error creating thread\n");
-		return 1;
-	}
-
-	if (pthread_create (&led_thread, NULL, ledFunc, &y)) {
-		fprintf(stderr, "Error creating thread\n");
-		return 1;
-	}
-
-	if (pthread_create (&file_thread, NULL, fileFunc, &z)) {
+	if (pthread_create (&main_thread, NULL, mainFunc, &w)) {
 		fprintf(stderr, "Error creating thread\n");
 		return 1;
 	}

@@ -40,9 +40,13 @@ void Patch_updateInpSEQ (StateInp* stateInp) {
 
 void Patch_updateSEQ (State* state) {
 
+	int len = gui_params[8];
+	if (len==0) len = 1;
+	len = 16;
+	int step = clock1.cntSeq % len;
 	updateClock (&clock1, 0.01);
-	state->cvOut[0] = sequence[clock1.cntSeq] * 0x00ff;
+	state->cvOut[0] = sequence[step] * 0x01ff;
 
 	state->trOut[0] = clock1.v;
-	state->encLeds = (1<<clock1.cntSeq);
+	state->encLeds = (1<<step);
 }

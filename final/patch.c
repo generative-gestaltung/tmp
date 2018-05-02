@@ -16,7 +16,7 @@ void updateClock (Clock* clock, float dt) {
 		clock->v = 0;
 
 	if (clock->v == 1.0 && clock->lastV == 0.0) {
-		clock->cntSeq = (clock->cntSeq+1)%16;
+		clock->cntSeq++; // = (clock->cntSeq+1)%16;
 	}
 	clock->lastV = clock->v;
 }
@@ -44,4 +44,5 @@ void updateLfo (Lfo* lfo, float dt) {
 void Patch_init (State* state) {
 	memset (&_stateInp, 0, sizeof (StateInp));
 	memset (state, 0, sizeof(State));
+	memset (gui_params, 0, sizeof(gui_params));
 }
