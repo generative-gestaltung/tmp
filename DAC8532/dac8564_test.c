@@ -55,10 +55,10 @@ RPI_V2_GPIO_P1_13->RPI_GPIO_P1_13
 #define uint8_t unsigned char
 #define uint16_t unsigned short
 
-#define channel_A   0x10
-#define channel_B   0x12
-#define channel_C   0x14
-#define channel_D   0x16
+#define CHANNEL_A   0x10
+#define CHANNEL_B   0x12
+#define CHANNEL_C   0x14
+#define CHANNEL_D   0x16
 
 
 void  bsp_DelayUS(uint64_t micros);
@@ -113,8 +113,11 @@ int  main() {
     while(1) {
 
         if(tmp==0) {
-     			Write_DAC8532(0x30, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x30)
-    			Write_DAC8532(0x34, Voltage_Convert(5.0,5.000-(float)i/10));    	//Write channel B buffer (0x34)		
+     			Write_DAC8532(CHANNEL_A, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x30)
+     			Write_DAC8532(CHANNEL_B, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x30)
+     			Write_DAC8532(CHANNEL_C, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x30)
+     			Write_DAC8532(CHANNEL_D, Voltage_Convert(5.0,0.00+(float)i/10));    	//Write channel A buffer (0x30)
+
     			i++;
 
 			if(i==50) {
