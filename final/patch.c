@@ -12,6 +12,7 @@ void updateClock (Clock* clock, float dt) {
 	clock->cnt++;
 	clock->lastV = clock->v;
 
+	if (clock->ds<1) clock->ds = 1;
 	if ((clock->cnt%clock->ds) < clock->ds/2)
 		clock->v = 1;
 	else

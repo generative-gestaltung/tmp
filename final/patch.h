@@ -70,7 +70,7 @@ typedef struct State {
 typedef struct StateInp {
 	uint8_t trIn[4];
 	int buttons[8];
-	float encoders[16];
+	int encoders[16];
 } StateInp;
 
 

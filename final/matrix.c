@@ -57,6 +57,13 @@ void Matrix_init() {
 	bcm2835_gpio_fsel (PIN_Y2, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel (PIN_Y3, BCM2835_GPIO_FSEL_OUTP);
 
+	bcm2835_gpio_write (PIN_Y0, LOW);
+	bcm2835_gpio_write (PIN_Y1, LOW);
+	bcm2835_gpio_write (PIN_Y2, LOW);
+	bcm2835_gpio_write (PIN_Y3, LOW);
+
+
+
 	bcm2835_gpio_fsel (PIN_TRIGGER_OUT0, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel (PIN_TRIGGER_OUT1, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel (PIN_TRIGGER_OUT2, BCM2835_GPIO_FSEL_OUTP);
@@ -79,9 +86,13 @@ void Matrix_update() {
 		bcm2835_gpio_write (PIN_Y1, LOW);
 		bcm2835_gpio_write (PIN_Y2, LOW);
 		bcm2835_gpio_write (PIN_Y3, LOW);
+
+		//bcm2835_gpio_fsel (PIN_Y0, BCM2835_GPIO_FSEL_OUTP);
+		//bcm2835_gpio_fsel (PIN_Y1, BCM2835_GPIO_FSEL_INPT);
+		//bcm2835_gpio_fsel (PIN_Y2, BCM2835_GPIO_FSEL_INPT);
+		//bcm2835_gpio_fsel (PIN_Y3, BCM2835_GPIO_FSEL_INPT);
 	}
 
-/*
 	if (row==1) {
 		bcm2835_gpio_write (PIN_Y0, LOW);
 		bcm2835_gpio_write (PIN_Y1, HIGH);
@@ -102,7 +113,7 @@ void Matrix_update() {
 		bcm2835_gpio_write (PIN_Y2, LOW);
 		bcm2835_gpio_write (PIN_Y3, HIGH);
 	}
-*/
+
 	usleep(1000);
 	x[0] = bcm2835_gpio_lev (PIN_X0);
 	x[1] = bcm2835_gpio_lev (PIN_X1);
@@ -114,14 +125,15 @@ void Matrix_update() {
 	x[7] = bcm2835_gpio_lev (PIN_X7);
 
 
-	updateEnc (&encoders[row*4+0], x[1]<<1 | x[0]);
-	//updateEnc (&encoders[row*4+1], x[3]<<1 | x[2]);
-	//updateEnc (&encoders[row*4+2], x[5]<<1 | x[4]);
-	//updateEnc (&encoders[row*4+3], x[7]<<1 | x[6]);
+
+	updateEnc (&encoders[0+row], x[1]<<1 | x[0]);
+	updateEnc (&encoders[4+row], x[3]<<1 | x[2]);
+	updateEnc (&encoders[8+row], x[5]<<1 | x[4]);
+	updateEnc (&encoders[12+row], x[7]<<1 | x[6]);
 
 	row = (row+1) % 4;
 
-
+/*
 	cnt = (cnt+1)%256;
 	if (!cnt) {
 		printf("%d %d %d %d \n", encoders[0].v, encoders[1].v, encoders[2].v, encoders[3].v);
@@ -130,5 +142,5 @@ void Matrix_update() {
 		printf("%d %d %d %d \n", encoders[12].v, encoders[13].v, encoders[14].v, encoders[15].v);
 		printf("\n");
 	}
-
+*/
 }
