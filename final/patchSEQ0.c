@@ -49,7 +49,7 @@ static int sequence3[4] = { 0, 3, 7, 12 };
 
 static int baseSpeed = BASE_SPEED;
 
-void Patch_updateInpSEQ (StateInp* stateInp) {
+void Patch_updateInpSEQ0 (StateInp* stateInp) {
 	int i;
 	for (i=0; i<4; i++) {
 		sequence0[i] = stateInp->encoders[i] / 4;
@@ -68,8 +68,7 @@ void Patch_updateInpSEQ (StateInp* stateInp) {
 
 
 
-void Patch_updateSEQ (State* state) {
-
+void Patch_updateSEQ0 (State* state) {
 
 	updateClock (&clock0, 0.01);
 	updateClock (&clock1, 0.01);

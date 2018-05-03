@@ -23,8 +23,8 @@ uint8_t I2C_LED_PORTS[4] = {
 int lastTrOut[4] = {0,0,0,0};
 uint8_t i2c_led_fd [4];
 
-char PATCH = 's';
-char NEW_PATCH = 's';
+char PATCH = 'A';
+char NEW_PATCH = 'A';
 
 void *fileFunc (void *x_void_ptr) {
 
@@ -72,21 +72,26 @@ void *mainFunc (void *x) {
 			stateInp1.encoders[i] = encoders[i].v;
 		}
 
-		if (PATCH=='s') {
-			Patch_updateInpSEQ (&stateInp1);
-		}
-		else {
+		if (PATCH=='A') {
 			Patch_updateInpLFO (&stateInp1);
+		}
+		else if (PATCH=='B') {
+			Patch_updateInpSEQ0 (&stateInp1);
+		}
+		else if (PATCH=='C') {
+			Patch_updateInpSEQ1 (&stateInp1);
 		}
 
 		memcpy (&state1, &state0, sizeof(State));
 
-		if (PATCH=='s') {
-			Patch_updateSEQ (&state0);
-
-		}
-		else {
+		if (PATCH=='A') {
 			Patch_updateLFO (&state0);
+		}
+		else if (PATCH=='B') {
+			Patch_updateSEQ0 (&state0);
+		}
+		else if (PATCH=='C') {
+			Patch_updateSEQ1 (&state0);
 		}
 
 

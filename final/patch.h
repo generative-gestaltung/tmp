@@ -87,8 +87,11 @@ void Patch_init (State* state);
 void Patch_updateLFO (State* state);
 void Patch_updateInputLFO (StateInp* state);
 
-void Patch_updateSEQ (State* state);
-void Patch_updateInputSEQ (StateInp* state);
+void Patch_updateSEQ0 (State* state);
+void Patch_updateInputSEQ0 (StateInp* state);
+
+void Patch_updateSEQ1 (State* state);
+void Patch_updateInputSEQ1 (StateInp* state);
 
 
 #endif
